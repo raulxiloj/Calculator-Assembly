@@ -99,6 +99,7 @@ LOCAL divide,getDigits,cleanRemainder
         mov buffer[si],ah
 endm
 
+;--------------------------------------------
 ;macro para obtener los coeficientes
 getCoefficients macro
     LOCAL while,coefficient4,coefficient3,coefficient2,coefficient1,coefficient0, finish
@@ -120,32 +121,31 @@ getCoefficients macro
         je coefficient1
         cmp cx, 0
         je coefficient0
-
-        coefficient4:
-            getTexto co4
-            dec cx
-            checkInput co4
-            jmp while 
-        coefficient3:
-            getTexto co3
-            dec cx
-            checkInput co3
-            jmp while
-        coefficient2:
-            getTexto co2
-            dec cx
-            checkInput co2
-            jmp while
-        coefficient1:
-            getTexto co1
-            dec cx
-            checkInput co1
-            jmp while
-        coefficient0:
-            getTexto co0
-            checkInput co0
-        finish:
-            print newLine
+    coefficient4:
+        getTexto c4
+        dec cx
+        checkInput c4
+        jmp while 
+    coefficient3:
+        getTexto c3
+        dec cx
+        checkInput c3
+        jmp while
+    coefficient2:
+        getTexto c2
+        dec cx
+        checkInput c2
+        jmp while
+    coefficient1:
+        getTexto c1
+        dec cx
+        checkInput c1
+        jmp while
+    coefficient0:
+        getTexto c0
+        checkInput c0
+    finish:
+        print newLine
 endm
 
 checkInput macro text
@@ -188,15 +188,9 @@ checkLength macro text
 LOCAL error1,error2,finish
     getLength text
     cmp si, 0
-    je error1
+    je errorLength1
     cmp si, 3
-    jae error2
-    jmp finish
-    error1:
-        errorLength1 text
-    error2:
-        errorLength2 text
-    finish:
+    jae errorLength2
 endm
 
 getLength macro var
@@ -210,21 +204,54 @@ LOCAL while, finish
     finish:
 endm
 
-;Handling errors
-errorLength1 macro var
-    print error2
-    cleanBuffer var, SIZEOF var, 24h
-    jmp menuPrincipal
+;-----------------------------------------------
+printFunction macro
+    print fx
+    printCoefficient c4,52
+    printCoefficient c3,51
+    printCoefficient c2,50
+    printCoefficient c1,49
+    printCoefficient c0,48
+    print newLine
+    print newLine
 endm
 
-errorLength2 macro var
-    print error3
-    cleanBuffer var, SIZEOF var, 24h
-    jmp menuPrincipal
+printCoefficient macro coefficient,variable
+LOCAL printNumber, printSign, finish, printSign, printPlus, printMinus, printNumber2
+    getLength coefficient
+    cmp si,2
+    je printSign
+
+    printNumber:
+        cmp coefficient[0],48
+        je finish
+        print plus
+        print coefficient
+        mov bl, variable
+        cmp bl, 48
+        je finish
+        mov varX[1],variable
+        print varX
+        jmp finish
+    printSign:
+        cmp coefficient[0],45
+        je printMinus
+        printPlus:
+            print plus
+            jmp printNumber2
+        printMinus: 
+            print minus
+    printNumber2:
+        print coefficient[1]
+        mov bl, variable
+        cmp bl, 48
+        je finish
+        mov varX[1],variable
+        print varX 
+    finish:
+
 endm
-
-
-
+;-----------------------------------------------
 
 convert macro array
 LOCAL isNegative, divide, divide2, fin
