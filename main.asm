@@ -16,7 +16,9 @@ c3        db 5 dup ('$')
 c2        db 5 dup ('$')
 c1        db 5 dup ('$')
 c0        db 5 dup ('$')
-number    db 2 dup (0)
+auxCo     db "    ",'$' 
+deriv     db 5 dup ('$')
+number    db ?
 newLine   db 10,'$'
 prueba    db 10,13,"Esto es una prueba gg",10,13,'$'
 ;--------------------------Possibles errors:--------------------------
@@ -60,7 +62,8 @@ main proc
         printFunction
         jmp menuPrincipal
     derivative:
-        ;TODO; deriveFunction
+        print newLine
+        deriveFunction
         jmp menuPrincipal
     integral:
         print prueba

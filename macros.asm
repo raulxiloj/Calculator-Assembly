@@ -45,48 +45,31 @@ LOCAL repeat
     loop repeat
 endm
 
-;Macro para guardar un numero en base a su ascii
-convertNumber macro var, number
-LOCAL isNegative,isPositive,finish
+;Macro para guardar el coeficiente como numero y no como ascii 
+convertNumber macro var
     xor bl,bl
-    cmp var[0], 45
-    je isNegative
-
-    isPositive:
-        mov bl, var[0]
-        sub bl, 48
-        mov number[si], bl
-        inc si
-        cmp var[si],24h
-        jne isPositive
-        jmp finish
-    isNegative:
-        mov al, var
-        sub al, 48
-        neg al
-        mov var, al
-    finish:
-        mov al, number
-        add al, 1
-        mov number, al
+    mov bl, var[1]
+    sub bl, 48
+    mov var[1], bl
 endm
 
 ;Macro to pass an 'int' to 'string'
 convertAscii macro num,buffer
 LOCAL divide,getDigits,cleanRemainder
+    int 3
     xor si, si      
     xor bx, bx      
     xor cx, cx      ;count digits
-    mov al, num
     mov bl, 10      ;divisor
+    mov al, num
     
     cleanRemainder:
-    xor ah,ah
+        xor ah,ah
     divide:
-        div bl      ;ax = ax/cx
-        inc cx      ;count digits
-        push ax     ;
-        cmp al, 0   ;quotient == 0? 
+        div bl          ;ax = ax/cx
+        inc cx          ;count digits
+        push ax         ;
+        cmp al, 0       ;quotient == 0? 
         je getDigits   
         jmp cleanRemainder
     getDigits:
@@ -125,52 +108,69 @@ getCoefficients macro
         getTexto c4
         dec cx
         checkInput c4
+        push bx
+        convertNumber c4
+        pop bx
         jmp while 
     coefficient3:
         getTexto c3
         dec cx
         checkInput c3
+        push bx
+        convertNumber c3
+        pop bx
         jmp while
     coefficient2:
         getTexto c2
         dec cx
         checkInput c2
+        push bx
+        convertNumber c2
+        pop bx
         jmp while
     coefficient1:
         getTexto c1
         dec cx
         checkInput c1
+        push bx
+        convertNumber c1
+        pop bx
         jmp while
     coefficient0:
         getTexto c0
         checkInput c0
+        convertNumber c0
     finish:
         print newLine
 endm
 
+;macro para verificar la entrada del usuario
 checkInput macro text
     checkLength text
-    checkRange text[0],text[1]
+    checkRange text
 endm
 
-checkRange macro char1,char2
+checkRange macro text
 LOCAL checkNumber,checkSign,checkOne,checkTwo,continue,finish
     cmp si, 1
     je checkOne
     jmp checkTwo
 
     checkOne:
-        isNumber char1
+        isNumber text[0]
+        mov al, text[0]
+        mov text[1],al
+        mov text[0],43
         jmp finish
     checkTwo:
         ;check sign
-        cmp char1,43      ;+
+        cmp text[0],43      ;+
         je continue     
-        cmp char1,45      ;-
+        cmp text[0],45      ;-
         je continue
         jmp errorChar
         continue:
-            isNumber char2
+            isNumber text[1]
     finish:
 endm
 
@@ -204,7 +204,7 @@ LOCAL while, finish
     finish:
 endm
 
-;-----------------------------------------------
+;---------------------PRINT FUNCTION------------------------
 printFunction macro
     print fx
     printCoefficient c4,52
@@ -217,73 +217,109 @@ printFunction macro
 endm
 
 printCoefficient macro coefficient,variable
-LOCAL printNumber, printSign, finish, printSign, printPlus, printMinus, printNumber2
-    getLength coefficient
-    cmp si,2
-    je printSign
-
-    printNumber:
-        cmp coefficient[0],48
-        je finish
-        print plus
-        print coefficient
-        mov bl, variable
-        cmp bl, 48
-        je finish
-        mov varX[1],variable
-        print varX
-        jmp finish
-    printSign:
-        cmp coefficient[0],45
-        je printMinus
-        printPlus:
-            print plus
-            jmp printNumber2
-        printMinus: 
-            print minus
-    printNumber2:
-        print coefficient[1]
-        mov bl, variable
-        cmp bl, 48
-        je finish
-        mov varX[1],variable
-        print varX 
+LOCAL printNumber, finish
+    cmp coefficient[1],0
+    je finish
+    printSign coefficient[0]
+    ;print number
+    convertAscii coefficient[1],auxCo
+    print auxCo             
+    printVariable variable
     finish:
-
 endm
-;-----------------------------------------------
 
-convert macro array
-LOCAL isNegative, divide, divide2, fin
-    xor si, si
+printSign macro char
+LOCAL printPlus, printMinus, finish
+    cmp char,43
+    je printPlus 
+    jmp printMinus 
+    printPlus: 
+        print plus
+        jmp finish
+    printMinus:
+        print minus
+    finish:
+endm
+
+printVariable macro num
+LOCAL finish
+    mov bl, num
+    cmp bl, 48
+    je finish
+    mov varX[1],num
+    print varX
+    finish:
+endm
+
+;---------------------DERIVE FUNCTION------------------------
+deriveFunction macro 
+LOCAL coefficient4, coefficient3, coefficient2, coefficient1,while
+    print fx
     xor cx, cx
-    xor bx, bx
-    xor dx, dx
-    mov dl, 0ah
-    test ax, 1000000000000000
-    ;jnz isNegative
-    jmp divide
+    xor bl, bl
+    mov cx, 4
 
-    ;isNegative:
-    ;    neg ax
-    ;    mov array[si],45
-    ;    inc si
-    ;    jmp divide
-    divide2:
-        xor ah,ah
-    divide:
-        div dl
-        push ax
-        cmp al, 00h
-        je fin
-        jmp divide2
-    fin:
-        pop ax
-        add ah, 30h
-        mov buffer[si],ah
-        inc si
-        loop fin
-        mov ah,24h
-        mov buffer[si],ah
-        inc si
+    while:
+    cmp cx, 4
+    je coefficient4
+    cmp cx, 3
+    je coefficient3
+    cmp cx, 2
+    je coefficient2
+    cmp cx, 1
+    je coefficient1
+
+    coefficient4:
+        dec cx
+        mov al, c4[1]
+        mov bl, 4
+        mul bl
+        mov number, al
+        printSign c4[0]
+        push cx
+        convertAscii number,deriv
+        pop cx
+        print deriv
+        printVariable 52
+        jmp while
+    coefficient3:
+        dec cx
+        mov al, c3[1]
+        mov bl, 3
+        mul bl
+        mov number, al
+        printSign c3[0]
+        push cx
+        convertAscii number,deriv
+        pop cx
+        print deriv
+        printVariable 51
+        jmp while
+    coefficient2:
+        dec cx
+        mov al, c2[1]
+        mov bl, 2
+        mul bl
+        mov number, al
+        printSign c2[0]
+        push cx
+        convertAscii number,deriv
+        pop cx
+        print deriv
+        printVariable 50
+        jmp while
+    coefficient1:
+        dec cx
+        mov al, c1[1]
+        mov bl, 1
+        mul bl
+        mov number, al
+        printSign c1[0]
+        push cx
+        convertAscii number,deriv
+        pop cx
+        print deriv
+        printVariable 49
+        print newLine
+        print newLine
 endm
