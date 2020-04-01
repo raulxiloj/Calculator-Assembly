@@ -1,11 +1,18 @@
 include macros.asm
+include graphics.asm
 .model small
 ;-----Stack segment-----
 .stack 100h
 ;-----Data segment-----
 .data
-header    db "UNIVERSIDAD DE SAN CARLOS DE GUATEMALA",10,13,"FACULTAD DE INGENIERIA",10,13,"CIENCIAS Y SISTEMAS",10,13,"ARQUITECTURA DE COMPUTADORAS Y ENSAMBLADORES 1",10,13,"NOMBRE: RAUL XILOJ",10,13,"CARNET: 201612113",10,13,"SECCION: A",10,10,13,'$'
-options   db "1. Ingresar funcion f(x)",10,13,"2. Funcion en memoria",10,13,"3. Derivada f(x)",10,13,"4. Integral F(x)",10,13,"5. Graficar funciones",10,13,"6. Reporte",10,13,"7. Modo calculadora",10,13,"8. Salir",10,13,10,13,"Ingrese una opcion: ",'$'
+header    db "UNIVERSIDAD DE SAN CARLOS DE GUATEMALA",10,13,"FACULTAD DE INGENIERIA",10,13,"CIENCIAS Y SISTEMAS",10,13,"ARQUITECTURA DE COMPUTADORAS Y ENSAMBLADORES 1",10,13,"NOMBRE: RAUL XILOJ",10,13,"CARNET: 201612113",10,13,"SECCION: A",10,'$'
+options   db 10,13,"1. Ingresar funcion f(x)",10,13,"2. Funcion en memoria",10,13,"3. Derivada f(x)",10,13,"4. Integral F(x)",10,13,"5. Graficar funciones",10,13,"6. Reporte",10,13,"7. Modo calculadora",10,13,"8. Salir",10,13,10,13,"Ingrese una opcion: ",'$'
+graphMenu db 10,10,13,"1. Graficar original f(x)",10,13,"2. Graficar derivada f(x)",10,13,"3. Graficar integral F(x)",10,13,"4. Regresar",10,13,10,13,"Ingrese una opcion: ",'$'
+RangeInit db 10,10,13, "Ingrese el valor inicial del intervalo: ",'$'
+RangeEnd  db "Ingrese el valor final del intervalo: ",'$'
+inter1    db 5 dup ('$')
+inter2    db 5 dup ('$')
+auxInter  db 5 dup ('$')
 coefX     db "- Coeficiente de xx: ",'$'
 fx        db 10,10,"       f(x) =",'$'
 plus      db " + ",'$'
@@ -16,6 +23,10 @@ c3        db 5 dup ('$')
 c2        db 5 dup ('$')
 c1        db 5 dup ('$')
 c0        db 5 dup ('$')
+d4        db ?
+d3        db ?
+d2        db ?
+d1        db ?
 auxCo     db "    ",'$' 
 deriv     db 5 dup ('$')
 number    db ?
@@ -69,8 +80,7 @@ main proc
         print prueba
         jmp menuPrincipal
     graphFunctions:
-        print prueba
-        jmp menuPrincipal
+        jmp secondMenu
     report:
         print prueba
         jmp menuPrincipal
@@ -80,6 +90,29 @@ main proc
     exit:
         mov ah, 4ch
         int 21h
+    secondMenu:
+        print graphMenu
+        getChar 
+        cmp al, '1'
+        je plot1
+        cmp al, '2'
+        je plot2
+        cmp al, '3'
+        je plot3
+        cmp al, '4'
+        je menuPrincipal
+        print error1
+        jmp secondMenu
+    plot1:
+        getRange
+        plotFunction
+        jmp menuPrincipal
+    plot2:
+        plotDerived
+        jmp menuPrincipal
+    plot3:
+        plotIntegral
+        jmp menuPrincipal
     invalidOption:
         print error1
         jmp menuPrincipal

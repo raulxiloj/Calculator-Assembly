@@ -53,10 +53,58 @@ convertNumber macro var
     mov var[1], bl
 endm
 
+convertNumber2 macro num
+LOCAL isNegative, finish
+    xor ax, ax
+    xor bx, bx
+    xor dx, dx
+    mov ax, 10  
+
+    mov bl, num[1]
+    sub bl, 48
+    mul bx
+    mov dl, num[2]
+    sub dl, 48
+    add al, dl
+    cmp num[0], 45
+    je isNegative
+    jmp finish
+
+    isNegative:
+        xor ah, ah
+        neg al
+    finish:
+        xor cx, cx
+        mov cl, num[0]
+        push cx
+        cleanBuffer num, SIZEOF num, 24h
+        pop cx
+        mov num[0],cl
+        mov num[1],al
+endm
+
+checkInterval macro var
+LOCAL order, finish
+    ;Todo check if the length don't pass the limit
+    getLength var
+    cmp si, 2
+    je order
+    jmp finish
+    
+    order:
+        xor bx, bx
+        mov bl, var[0]
+        mov bh, var[1]
+        mov var[0], 43
+        mov var[1], bl
+        mov var[2], bh
+    finish:
+
+endm
+
 ;Macro to pass an 'int' to 'string'
 convertAscii macro num,buffer
 LOCAL divide,getDigits,cleanRemainder
-    int 3
     xor si, si      
     xor bx, bx      
     xor cx, cx      ;count digits
@@ -81,6 +129,7 @@ LOCAL divide,getDigits,cleanRemainder
         mov ah, 24h
         mov buffer[si],ah
 endm
+
 
 ;--------------------------------------------
 ;macro para obtener los coeficientes
@@ -141,7 +190,6 @@ getCoefficients macro
         checkInput c0
         convertNumber c0
     finish:
-        print newLine
 endm
 
 ;macro para verificar la entrada del usuario
@@ -213,7 +261,6 @@ printFunction macro
     printCoefficient c1,49
     printCoefficient c0,48
     print newLine
-    print newLine
 endm
 
 printCoefficient macro coefficient,variable
@@ -280,7 +327,7 @@ LOCAL coefficient4, coefficient3, coefficient2, coefficient1,while
         convertAscii number,deriv
         pop cx
         print deriv
-        printVariable 52
+        printVariable 51
         jmp while
     coefficient3:
         dec cx
@@ -293,7 +340,7 @@ LOCAL coefficient4, coefficient3, coefficient2, coefficient1,while
         convertAscii number,deriv
         pop cx
         print deriv
-        printVariable 51
+        printVariable 50
         jmp while
     coefficient2:
         dec cx
@@ -306,7 +353,7 @@ LOCAL coefficient4, coefficient3, coefficient2, coefficient1,while
         convertAscii number,deriv
         pop cx
         print deriv
-        printVariable 50
+        printVariable 49
         jmp while
     coefficient1:
         dec cx
@@ -319,7 +366,18 @@ LOCAL coefficient4, coefficient3, coefficient2, coefficient1,while
         convertAscii number,deriv
         pop cx
         print deriv
-        printVariable 49
+        printVariable 48
         print newLine
-        print newLine
+endm
+
+;macro para obtener los intervarlos
+getRange macro
+    print rangeInit
+    getTexto inter1
+    checkInterval inter1
+    convertNumber2 inter1
+    print rangeEnd
+    getTexto inter2
+    checkInterval inter2
+    convertNumber2 inter2
 endm
