@@ -100,18 +100,62 @@ cuadratic macro
 endm
 
 lineal macro
-LOCAL drawLineal
-    drawInterval
-    ;check sign
-    xor bx, bx
-    xor dx, dx
-    mov cx, 50  ;intervalo
-    mov dl, 160 ;x 
-    mov bl, 100 ;y
+LOCAL while, finish, is_negative, is_positive, continue, plusN, plusP, minusN, minusP
+    int 3
+    xor ax, ax
+    xor bx, bx          ;x
+    xor cx, cx          ;cl = inter1 | ch = inter2
+    mov cl, inter1[1]   
+    mov ch, inter2[1]
+    mov dl, 100         ;y 
+    mov bl, 160         ;(160,100) - (0,0)
     
-    ;drawLineal:
-    ;drawPixel
-    ;loop drawConstant
+    while:
+        mov al, c1[1]       ;al = coeficiente
+        mov dl, 100
+        mov bl, 160 
+        ;checkSign
+        test cl, cl     
+        js is_negative
+        jmp is_positive
+        is_negative:
+            neg cl
+            sub bl, cl      
+            mul cl
+            neg cl
+            add dl, al
+            ;todo check sign coefficient 0
+            cmp c0[0],43
+            je plusN
+            jmp minusN
+            plusN:
+                sub dl,c0[1]
+                jmp continue
+            minusN:
+                add dl, c0[1]
+                jmp continue
+        is_positive:
+            mul cl
+            sub dl, al
+            add bl, cl
+            cmp c0[0],43
+            je plusP
+            jmp minusP
+            plusP:
+                sub dl, c0[1]
+                jmp continue
+            minusP:
+                add dl, c0[1]
+        continue:
+            inc cl
+            xor dh, dh
+            ;check axis x
+            drawPixel bx, dx, 0ch
+            cmp cl, ch
+            jne while 
+            jmp finish
+    finish:
+
 endm
 
 constant macro
@@ -120,9 +164,9 @@ LOCAL while, temp, finish, plus, minus, continue
     xor cx, cx   
     mov cl, inter1[1]
     mov ch, inter2[1]
-    mov dl, 100
-    mov bl, 160
-    ;checkSign
+    mov bl, 160     ;x
+    mov dl, 100     ;y
+    ;checkSign coefficient
     cmp c0[0], 43
     je plus 
     jmp minus
@@ -159,7 +203,7 @@ LOCAL while, temp, finish
     xor cx, cx          ;cl = inter1  | ch = inter2
     mov cl, inter1[1]
     mov ch, inter2[1]
-    mov bl, 160
+    mov bl, 160         ;Punto de inicio
     cmp inter1[0],45
     je temp
     add bl, inter1[1]

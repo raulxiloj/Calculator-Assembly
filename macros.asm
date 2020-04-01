@@ -130,7 +130,6 @@ LOCAL divide,getDigits,cleanRemainder
         mov buffer[si],ah
 endm
 
-
 ;--------------------------------------------
 ;macro para obtener los coeficientes
 getCoefficients macro
