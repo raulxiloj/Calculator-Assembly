@@ -30,6 +30,13 @@ endm
 
 ;draw a pixel
 drawPixel macro coorX, coorY, color
+LOCAL fin
+    xor si, si
+    mov si, coorY
+    cmp si, 0
+    jl fin
+    cmp si, 200
+    jg fin
     pusha
     mov ah, 0ch
     mov al, color
@@ -38,6 +45,7 @@ drawPixel macro coorX, coorY, color
     mov cx, coorX
     int 10h
     popa
+    fin:
 endm
 
 drawAxis macro
@@ -55,7 +63,6 @@ endm
 
 checkFunction macro
 LOCAL isFourthGrade, isCubic, isCuadratic, isConstant, finish
-
     cmp c4[1], 0
     jne isFourthGrade
     cmp c3[1], 0
@@ -95,13 +102,98 @@ thirdGrade macro
 
 endm
 
+scale2 macro
+    
+endm
+
 cuadratic macro
+LOCAL while, finish, is_negative, is_positive, continue
+    xor ax, ax
+    xor bx, bx          
+    xor cx, cx          ;cl = inter1 | ch = inter2
+    mov cl, inter1[1]   
+    mov ch, inter2[1]
+
+    while:
+        xor ax, ax
+        mov bl, 160         ;x
+        mov dl, 100         ;y (160,100) - (0,0)
+        ;checkSign
+        test cl,cl    
+        js is_negative
+        jmp is_positive
+        is_negative:
+            neg cl
+            sub bl, cl  
+            pushExceptAX     
+            potencia 2, cl 
+            popExceptAx
+            neg cl
+            cascadaX2
+            jmp continue
+        is_positive:
+            mul cl
+            add bl, cl
+            pushExceptAX     
+            potencia 2, cl 
+            popExceptAx
+            ;sub dl, al
+            cascadaX2
+        continue:
+            inc cl
+            xor dh, dh
+            ;check axis x
+            drawPixel bx, dx, 0ch
+            cmp cl, ch
+            jg finish
+            jmp while 
+    finish:
+endm
+
+cascadaX2 macro
+LOCAL plus2,minus2, plus1, minus1, continue, plus0, minus0, fin, coefficient1, coefficient0
+    ;coefficient 2
+    cmp c2[0],43
+    je plus2
+    jmp minus2
+    plus2:
+        mul c2[1]
+        sub dl, al
+        jmp coefficient0
+    minus2:
+        mul c2[1]
+        sub dl, al
+    coefficient1:
+    ;coefficient 1
+        xor ax, ax
+        cmp c1[0],43
+        je plus1
+        jmp minus1
+    plus1:
+        mov al, c1[1]
+        mul cl
+        sub dl, al
+        jmp coefficient0
+    minus1:
+        mov al, c1[1]
+        mul cl
+        add dl, al
+    coefficient0:
+    ;coefficient 0
+        cmp c0[0],43
+        je plus0
+        jmp minus0
+    plus0:
+        sub dl, c0[1]
+        jmp fin
+    minus0:
+        add dl, c0[1]
+    fin:
 
 endm
 
 lineal macro
 LOCAL while, finish, is_negative, is_positive, continue, plusN, plusP, minusN, minusP
-    int 3
     xor ax, ax
     xor bx, bx          ;x
     xor cx, cx          ;cl = inter1 | ch = inter2

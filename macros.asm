@@ -380,3 +380,35 @@ getRange macro
     checkInterval inter2
     convertNumber2 inter2
 endm
+
+;potencia
+potencia macro exponente, value
+LOCAL while, finish
+    xor bx, bx
+    mov bl, exponente
+    mov ax, 1
+
+    cmp bl, 0
+    jg while
+    jmp finish
+
+    while:
+        cmp bx, 1
+        jl finish
+        mul value
+        dec bx
+        jmp while
+    finish:
+endm
+
+pushExceptAX macro
+    push bx
+    push cx
+    push dx
+endm
+
+popExceptAX macro
+    pop dx
+    pop cx
+    pop bx
+endm

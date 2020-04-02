@@ -2,10 +2,48 @@
 ;------------------macros para manejar ficheros----------------
 ;--------------------------------------------------------------
 
+;macro para obtener la ruta dada por un usuario
+;similar al de getTexto, la unica diferencia es el fin de cadena
+getPath macro array
+LOCAL getCadena, finCadena
+    mov si,0    ;xor si,si
+    getCadena:
+        getChar
+        cmp al,0dh
+        je finCadena
+        mov array[si],al
+        inc si
+        jmp getCadena
+    finCadena:
+    mov al,00h
+    mov array[si],al
+endm
+
+;macro para quitar los '@' de la direccion
+;@@C:\entrada.arq@@ --> C:\entrada.arq
+fixPath macro
+LOCAL while, finish
+    xor bx, bx
+    mov si, offset file1 + 2
+
+    while:
+        mov cl, [si + bx]
+        cmp cl, '$'
+        je finish
+        cmp cl, '@'
+        je  finish
+
+        mov file2[bx], cl
+        inc bx
+        jmp while
+    finish:
+        print file2
+endm
+
 ;macro para abrir un fichero
 ;param file = nombre del archivo
 ;param &handler = num del archivo
-openFile macro file,handler
+openFile macro file
     mov ah,3dh
     mov al,010b
     lea dx,file
@@ -24,6 +62,7 @@ readFile macro handler,fileData,numBytes
     mov cx, numBytes
     lea dx, fileData
     int 21h
+    mov fileSize, ax
     jc errorReading
 endm
 
@@ -33,6 +72,7 @@ closeFile macro handler
     mov ah,3eh
     mov bx, handler
     int 21h
+    jc errorClosing
 endm
 
 ;macro para crear un fichero
