@@ -354,7 +354,7 @@ endm
 
 ;---------------------INTEGRATE FUNCTION------------------------
 integrateFunction macro
-LOCAL coefficient4, coefficient3, coefficient2, coefficient1, coefficient0, finish, fixNum4, num4, fin4, fixNum3, num3, fin3, fixNum2, num2, fin2, fixNum1, num1, fin1
+LOCAL coefficient4, coefficient3, coefficient2, coefficient1, coefficient0, finish, fixNum4, num4, fixNum3, num3, fixNum2, num2, fixNum1, num1
     clearScreen
     print msgIntegral
     print fx
@@ -378,12 +378,13 @@ LOCAL coefficient4, coefficient3, coefficient2, coefficient1, coefficient0, fini
         fixNum4:
             mov cl, c4[1]
             mov i5[1], cl
-            jmp fin4
-        num4:
-            mov i5[1],al
-        fin4:
             mov i5[2], 5
             printCoefficientI i5, 53
+            jmp coefficient3
+        num4:
+            mov i5[1],al
+            mov i5[2],0
+            printCoefficient i5, 53
     coefficient3:
         xor ax, ax
         cmp c3[1],0
@@ -400,18 +401,19 @@ LOCAL coefficient4, coefficient3, coefficient2, coefficient1, coefficient0, fini
         fixNum3:
             mov cl, c3[1]
             mov i4[1], cl
-            jmp fin3
-        num3:
-            mov i4[1],al
-        fin3:
             mov i4[2], 4
             printCoefficientI i4, 52 
+            jmp coefficient2
+        num3:
+            mov i4[1],al
+            mov i4[2],0
+            printCoefficient i4, 52
     coefficient2:
         xor ax, ax
         cmp c2[1],0
         je coefficient1
         mov al, c2[1]
-        mov bl, 2
+        mov bl, 3
         div bl
         mov cl, c2[0]
         mov i3[0], cl
@@ -422,18 +424,19 @@ LOCAL coefficient4, coefficient3, coefficient2, coefficient1, coefficient0, fini
         fixNum2:
             mov cl, c2[1]
             mov i3[1], cl
-            jmp fin2
-        num2:
-            mov i3[1],al
-        fin2:
             mov i3[2], 3
             printCoefficientI i3, 51 
+            jmp coefficient1
+        num2:
+            mov i3[1],al
+            mov i3[2],0
+            printCoefficient i3, 51 
     coefficient1:
         xor ax, ax
         cmp c1[1],0
         je coefficient0
         mov al, c1[1]
-        mov bl, 1
+        mov bl, 2
         div bl
         mov cl, c2[0]
         mov i2[0], cl
@@ -444,12 +447,13 @@ LOCAL coefficient4, coefficient3, coefficient2, coefficient1, coefficient0, fini
         fixNum1:
             mov cl, c1[1]
             mov i2[1], cl
-            jmp fin1
+            mov i2[2], 2
+            printCoefficientI i2, 50
+            jmp coefficient0
         num1:
             mov i2[1],al
-        fin1:
-            mov i2[2], 2
-            printCoefficientI i2, 50 
+            mov i2[2],0
+            printCoefficient i2, 50
     coefficient0:
         xor ax, ax
         cmp c0[1],0
@@ -464,25 +468,16 @@ LOCAL coefficient4, coefficient3, coefficient2, coefficient1, coefficient0, fini
 endm
 
 printCoefficientI macro coefficient,variable
-LOCAL printNumber, finish, addOne, continue
-    cmp coefficient[1],0
-    je addOne
-    continue:
-        printSign coefficient[0]
-        ;print number
-        convertAscii coefficient[1],deriv
-        print deriv
-        print fraction
-        convertAscii coefficient[2],deriv
-        print deriv
-        cleanBuffer deriv, SIZEOF deriv, 24h
-        print space
-        printVariable variable
-        jmp finish
-    addOne:
-        add coefficient[1], 1
-        jmp continue
-    finish:
+    printSign coefficient[0]
+    ;print number
+    convertAscii coefficient[1],deriv
+    print deriv
+    print fraction
+    convertAscii coefficient[2],deriv
+    print deriv
+    cleanBuffer deriv, SIZEOF deriv, 24h
+    print space
+    printVariable variable
 endm
 
 ;------------------------Potencia-------------------------------
