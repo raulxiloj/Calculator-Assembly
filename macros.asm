@@ -109,7 +109,8 @@ LOCAL divide,getDigits,cleanRemainder
     xor bx, bx      
     xor cx, cx      ;count digits
     mov bl, 10      ;divisor
-    mov al, num
+    mov ax, num
+    jmp divide
     
     cleanRemainder:
         xor ah,ah
@@ -270,7 +271,9 @@ LOCAL printNumber, finish
     je finish
     printSign coefficient[0]
     ;print number
-    convertAscii coefficient[1],deriv
+    xor dx, dx
+    mov dl, coefficient[1]
+    convertAscii dx,deriv
     print deriv
     printVariable variable
     finish:
@@ -470,10 +473,14 @@ endm
 printCoefficientI macro coefficient,variable
     printSign coefficient[0]
     ;print number
-    convertAscii coefficient[1],deriv
+    xor dx, dx
+    mov dl, coefficient[1]
+    convertAscii dx,deriv
     print deriv
     print fraction
-    convertAscii coefficient[2],deriv
+    xor dx, dx
+    mov dl, coefficient[2]
+    convertAscii dx,deriv
     print deriv
     cleanBuffer deriv, SIZEOF deriv, 24h
     print space

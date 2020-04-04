@@ -79,7 +79,9 @@ LOCAL finish
     cmp coefficient[1], 0
     je finish
     writeSign coefficient[0]
-    convertAscii coefficient[1],auxCo
+    xor dx, dx
+    mov dl, coefficient[1] 
+    convertAscii dx,auxCo
     writeFile handler, auxCo, [SIZEOF auxCo - 1]
     writeVariable var
     finish:
@@ -90,7 +92,9 @@ LOCAL finish, print2
     cmp coefficient[1], 0
     je finish
     writeSign coefficient[0]
-    convertAscii coefficient[1],deriv
+    xor dx, dx
+    mov dl, coefficient[1]
+    convertAscii dx,deriv
     cmp coefficient[1], 9
     jg print2
     writeFile handler, deriv, 1
@@ -115,10 +119,14 @@ LOCAL possibleF, finish, normal
         cmp coefficient[2], 0
         je normal
         writeSign coefficient[0]
-        convertAscii coefficient[1],deriv
+        xor dx, dx
+        mov dl, coefficient[1]
+        convertAscii dx,deriv
         writeFile handler, deriv, 1
         writeFile handler, fraction, 1
-        convertAscii coefficient[2],deriv
+        xor dx, dx
+        mov dl, coefficient[2]
+        convertAscii dx,deriv
         writeFile handler, deriv, 1
         cleanBuffer deriv, SIZEOF deriv, 24h
         writeFile handler, space, 1
