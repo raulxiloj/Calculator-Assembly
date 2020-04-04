@@ -241,10 +241,11 @@ LOCAL while, addition, finish, continue, substraction, is_negative, normal
     xor ax, ax  ; 
     xor bx, bx  ;actual char
     xor cx, cx  ;number
-    xor dx, dx  ;flag for numbers
     xor si, si
     
     while:
+        int 3
+        xor ax, ax
         mov ax, 10
         cmp postfix[si], '$'
         je finish
@@ -259,23 +260,18 @@ LOCAL while, addition, finish, continue, substraction, is_negative, normal
         cmp bl, '/'
         je division
 
-        cmp dx, 1
-        je num2
-        num1:
-            mov ch, postfix[si]
-            inc dx
-            jmp continue
-        num2: 
-            mov cl, postfix[si]
-            dec dx
-            ;cast number
-            sub ch, 48
-            mul ch
-            xor ch, ch
-            sub cx, 48
-            add ax, cx
-            push ax
-            jmp continue
+        ;then is a number
+        mov ch, postfix[si]
+        inc si 
+        mov cl, postfix[si]
+        ;cast number
+        sub ch, 48
+        mul ch  ;res ax
+        xor ch, ch
+        sub cx, 48
+        add ax, cx
+        push ax
+        jmp continue
 
         addition:
             pop ax
@@ -313,17 +309,17 @@ LOCAL while, addition, finish, continue, substraction, is_negative, normal
             jmp while
 
     finish:
-        pop ax
-        ;neg ax, ax
-        ;js is_negative
-        ;jmp normal 
-
-        ;is_negative:
-        ;    neg ax
-            ;print '-' 
-        ;normal:
-        convertAscii al, res
         print msgRes
-        print res
-        print newLine
+        pop ax
+        test ax, ax
+        js is_negative
+        jmp normal
+
+        is_negative:
+            neg ax
+            convertAscii ax, res
+            print minus
+        normal:
+            print res
+            print newLine
 endm
