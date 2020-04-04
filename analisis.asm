@@ -1,10 +1,19 @@
+;--------------------------------------------------------------
+;------macros para leer analizar el archivo y ejectuarlo-------
+;--------------------------------------------------------------
 analisis macro
-    openFile file2
+    ;Lectura del archivo
+    openFile file2, handler
     readFile handler, fileData, SIZEOF fileData
     closeFile handler
+    ;Imprimir lo que se leyo
+    print msgOp
+    print fileData
+    ;Analisis
     lexicalAnalysis
     syntaxAnalysis
-    ;toPostfix
+    toPostfix
+    executeExpression
 endm
 
 lexicalAnalysis macro 
@@ -56,7 +65,7 @@ LOCAL while, finish, continue, symbol, continue, error, space
     
     while:
         cmp si, fileSize
-        jge finish
+        je finish
 
         mov cl, fileData[si]
         ;Symbols
@@ -74,6 +83,7 @@ LOCAL while, finish, continue, symbol, continue, error, space
         ;EOF
         cmp cl, ';'
         je space
+
         ;check if numbers >= 2
         cmp ax, 2
         jge error
@@ -102,7 +112,9 @@ LOCAL while, finish, continue, symbol, continue, error, space
             jmp syntaxError
 
         finish:
-endm
+            
+            jne syntaxEOF
+    endm
 
 toPostfix macro
 LOCAL while, continue, finish, plus, minus
@@ -119,6 +131,8 @@ LOCAL while, continue, finish, plus, minus
         ;space
         cmp bl, 32
         je continue
+        cmp bl, ';'
+        je continue
         ;symbols
         cmp bl, '+'
         je plus
@@ -126,7 +140,7 @@ LOCAL while, continue, finish, plus, minus
         je minus
         cmp bl, '*'
         je times
-        cmp cl, '/'
+        cmp bl, '/'
         je divs
 
         ;mov num to postfix
@@ -159,13 +173,10 @@ LOCAL while, continue, finish, plus, minus
         
         finish:
             vaciarPila
-            print newLine
-            print postfix
 endm
 
 precedencia macro op, sym
 LOCAL isEmpty, equal, greater, lower, finish
-    int 3
     cmp stackPost, 0
     je isEmpty
 
@@ -205,7 +216,7 @@ LOCAL isEmpty, equal, greater, lower, finish
         mov al, op
         mov ah, sym
         push ax
-    
+
     finish:
 endm
 
@@ -223,4 +234,96 @@ LOCAL while, finish
         dec stackPost
         jmp while
     finish:
+endm
+
+executeExpression macro
+LOCAL while, addition, finish, continue, substraction, is_negative, normal
+    xor ax, ax  ; 
+    xor bx, bx  ;actual char
+    xor cx, cx  ;number
+    xor dx, dx  ;flag for numbers
+    xor si, si
+    
+    while:
+        mov ax, 10
+        cmp postfix[si], '$'
+        je finish
+
+        mov bl, postfix[si]
+        cmp bl, '+'
+        je addition
+        cmp bl, '-'
+        je substraction
+        cmp bl, '*'
+        je multiplication
+        cmp bl, '/'
+        je division
+
+        cmp dx, 1
+        je num2
+        num1:
+            mov ch, postfix[si]
+            inc dx
+            jmp continue
+        num2: 
+            mov cl, postfix[si]
+            dec dx
+            ;cast number
+            sub ch, 48
+            mul ch
+            xor ch, ch
+            sub cx, 48
+            add ax, cx
+            push ax
+            jmp continue
+
+        addition:
+            pop ax
+            mov cx, ax
+            pop ax
+            add ax, cx
+            push ax
+            jmp continue
+        
+        substraction:
+            pop ax
+            mov cx, ax
+            pop ax
+            sub ax, cx
+            push ax
+            jmp continue
+
+        multiplication:
+            pop ax
+            mov cx, ax
+            pop ax
+            mul cx
+            push ax
+            jmp continue
+        
+        division:
+            pop ax 
+            mov cx, ax
+            pop ax
+            div cx
+            push ax
+
+        continue:
+            inc si 
+            jmp while
+
+    finish:
+        pop ax
+        ;neg ax, ax
+        ;js is_negative
+        ;jmp normal 
+
+        ;is_negative:
+        ;    neg ax
+            ;print '-' 
+        ;normal:
+        convertAscii al, res
+        print msgRes
+        print res
+        print newLine
 endm
