@@ -37,15 +37,14 @@ LOCAL while, finish
         inc bx
         jmp while
     finish:
-        print file2
 endm
 
 ;macro para abrir un fichero
 ;param file = nombre del archivo
 ;param &handler = num del archivo
-openFile macro file
+openFile macro file, handler
     mov ah,3dh
-    mov al,010b
+    mov al,010b ;Acceso lectura/escritura
     lea dx,file
     int 21h
     jc errorOpening
@@ -69,6 +68,7 @@ endm
 ;macro para cerrar un fichero
 ;param handler = num del fichero
 closeFile macro handler
+    xor bx, bx
     mov ah,3eh
     mov bx, handler
     int 21h
