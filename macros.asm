@@ -76,9 +76,9 @@ LOCAL isNegative, finish
     finish:
         xor cx, cx
         mov cl, num[0]
-        push cx
-        cleanBuffer num, SIZEOF num, 24h
-        pop cx
+        ;push cx
+        ;cleanBuffer num, SIZEOF num, 24h
+        ;pop cx
         mov num[0],cl
         mov num[1],al
 endm
@@ -105,7 +105,7 @@ endm
 ;Macro to pass an 'int' to 'string'
 convertAscii macro num,buffer
 LOCAL divide,getDigits,cleanRemainder
-    xor si, si      
+    xor si, si    
     xor bx, bx      
     xor cx, cx      ;count digits
     mov bl, 10      ;divisor
@@ -114,7 +114,7 @@ LOCAL divide,getDigits,cleanRemainder
     cleanRemainder:
         xor ah,ah
     divide:
-        div bl          ;ax = ax/cx
+        div bl          ;ax = al/bl
         inc cx          ;count digits
         push ax         ;
         cmp al, 0       ;quotient == 0? 
@@ -134,7 +134,7 @@ endm
 ;macro para obtener los coeficientes
 getCoefficients macro
     LOCAL while,coefficient4,coefficient3,coefficient2,coefficient1,coefficient0, finish
-    print newLine
+    print msgInput1
     xor cx, cx
     mov cx, 4
     mov bl, 53
@@ -253,6 +253,8 @@ endm
 
 ;---------------------PRINT FUNCTION------------------------
 printFunction macro
+    clearScreen
+    print msgFunction
     print fx
     printCoefficient c4,52
     printCoefficient c3,51
@@ -268,8 +270,8 @@ LOCAL printNumber, finish
     je finish
     printSign coefficient[0]
     ;print number
-    convertAscii coefficient[1],auxCo
-    print auxCo             
+    convertAscii coefficient[1],deriv
+    print deriv
     printVariable variable
     finish:
 endm
@@ -298,90 +300,192 @@ LOCAL finish
 endm
 
 ;---------------------DERIVE FUNCTION------------------------
-deriveFunction macro 
-LOCAL coefficient4, coefficient3, coefficient2, coefficient1,while
+deriveFunction macro
+LOCAL coefficient4, coefficient3, coefficient2, coefficient1, finish
+    clearScreen
+    print msgDerived
     print fx
+    xor ax, ax
+    xor bx, bx
     xor cx, cx
-    xor bl, bl
-    mov cx, 4
-
-    while:
-    cmp cx, 4
-    je coefficient4
-    cmp cx, 3
-    je coefficient3
-    cmp cx, 2
-    je coefficient2
-    cmp cx, 1
-    je coefficient1
-
+    cmp c4[1],0
+    je coefficient3 
     coefficient4:
-        dec cx
         mov al, c4[1]
         mov bl, 4
-        mul bl
-        mov number, al
-        printSign c4[0]
-        push cx
-        convertAscii number,deriv
-        pop cx
-        print deriv
-        printVariable 51
-        jmp while
+        mul bl 
+        mov cl, c4[0]
+        mov d3[0], cl
+        mov d3[1], al
+        printCoefficient d3, 51
     coefficient3:
-        dec cx
+        cmp c3[1],0
+        je coefficient2
         mov al, c3[1]
         mov bl, 3
         mul bl
-        mov number, al
-        printSign c3[0]
-        push cx
-        convertAscii number,deriv
-        pop cx
-        print deriv
-        printVariable 50
-        jmp while
+        mov cl, c3[0]
+        mov d2[0], cl
+        mov d2[1], al
+        printCoefficient d2, 50
     coefficient2:
-        dec cx
+        cmp c2[1],0
+        je coefficient1
         mov al, c2[1]
         mov bl, 2
         mul bl
-        mov number, al
-        printSign c2[0]
-        push cx
-        convertAscii number,deriv
-        pop cx
-        print deriv
-        printVariable 49
-        jmp while
+        mov cl, c2[0]
+        mov d1[0], cl
+        mov d1[1], al
+        printCoefficient d1, 49
     coefficient1:
-        dec cx
+        cmp c1[1],0
+        je finish
         mov al, c1[1]
         mov bl, 1
         mul bl
-        mov number, al
-        printSign c1[0]
-        push cx
-        convertAscii number,deriv
-        pop cx
-        print deriv
-        printVariable 48
+        mov cl, c1[0]
+        mov d0[0], cl
+        mov d0[1], al
+        printCoefficient d0, 48
+    finish:
         print newLine
 endm
 
-;macro para obtener los intervarlos
-getRange macro
-    print rangeInit
-    getTexto inter1
-    checkInterval inter1
-    convertNumber2 inter1
-    print rangeEnd
-    getTexto inter2
-    checkInterval inter2
-    convertNumber2 inter2
+;---------------------INTEGRATE FUNCTION------------------------
+integrateFunction macro
+LOCAL coefficient4, coefficient3, coefficient2, coefficient1, coefficient0, finish, fixNum4, num4, fin4, fixNum3, num3, fin3, fixNum2, num2, fin2, fixNum1, num1, fin1
+    clearScreen
+    print msgIntegral
+    print fx
+
+    xor ax, ax
+    xor bx, bx
+    xor cx, cx
+    cmp c4[1],0
+    je coefficient3 
+
+    coefficient4:
+        mov al, c4[1]
+        mov bl, 5
+        div bl 
+        mov cl, c4[0]
+        mov i5[0], cl
+        ;
+        cmp al, 0
+        je fixNum4
+        jmp num4
+        fixNum4:
+            mov cl, c4[1]
+            mov i5[1], cl
+            jmp fin4
+        num4:
+            mov i5[1],al
+        fin4:
+            mov i5[2], 5
+            printCoefficientI i5, 53
+    coefficient3:
+        xor ax, ax
+        cmp c3[1],0
+        je coefficient2
+        mov al, c3[1]
+        mov bl, 4
+        div bl
+        mov cl, c3[0]
+        mov i4[0], cl
+        ;
+        cmp al,0
+        je fixNum3
+        jmp num3
+        fixNum3:
+            mov cl, c3[1]
+            mov i4[1], cl
+            jmp fin3
+        num3:
+            mov i4[1],al
+        fin3:
+            mov i4[2], 4
+            printCoefficientI i4, 52 
+    coefficient2:
+        xor ax, ax
+        cmp c2[1],0
+        je coefficient1
+        mov al, c2[1]
+        mov bl, 2
+        div bl
+        mov cl, c2[0]
+        mov i3[0], cl
+        ;
+        cmp al,0
+        je fixNum2
+        jmp num2
+        fixNum2:
+            mov cl, c2[1]
+            mov i3[1], cl
+            jmp fin2
+        num2:
+            mov i3[1],al
+        fin2:
+            mov i3[2], 3
+            printCoefficientI i3, 51 
+    coefficient1:
+        xor ax, ax
+        cmp c1[1],0
+        je coefficient0
+        mov al, c1[1]
+        mov bl, 1
+        div bl
+        mov cl, c2[0]
+        mov i2[0], cl
+        ;
+        cmp al,0
+        je fixNum1
+        jmp num1
+        fixNum1:
+            mov cl, c1[1]
+            mov i2[1], cl
+            jmp fin1
+        num1:
+            mov i2[1],al
+        fin1:
+            mov i2[2], 2
+            printCoefficientI i2, 50 
+    coefficient0:
+        xor ax, ax
+        cmp c0[1],0
+        je finish 
+        mov cl, c0[0]
+        mov ch, c0[1]
+        mov i1[0], cl
+        mov i1[1], ch
+        printCoefficient i1, 49 
+    finish:
+        print constantI
 endm
 
-;potencia
+printCoefficientI macro coefficient,variable
+LOCAL printNumber, finish, addOne, continue
+    cmp coefficient[1],0
+    je addOne
+    continue:
+        printSign coefficient[0]
+        ;print number
+        convertAscii coefficient[1],deriv
+        print deriv
+        print fraction
+        convertAscii coefficient[2],deriv
+        print deriv
+        cleanBuffer deriv, SIZEOF deriv, 24h
+        print space
+        printVariable variable
+        jmp finish
+    addOne:
+        add coefficient[1], 1
+        jmp continue
+    finish:
+endm
+
+;------------------------Potencia-------------------------------
 potencia macro exponente, value
 LOCAL while, finish
     xor bx, bx
@@ -412,3 +516,21 @@ popExceptAX macro
     pop cx
     pop bx
 endm
+
+;macro para obtener los intervarlos
+getRange macro
+    print msgInput3
+    getTexto inter1
+    checkInterval inter1
+    convertNumber2 inter1
+    print msgInput4
+    getTexto inter2
+    checkInterval inter2
+    convertNumber2 inter2
+endm
+
+clearScreen macro
+    setGraphicMode
+    setTextMode
+endm
+
