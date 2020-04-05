@@ -8,6 +8,12 @@ print macro cadena
     int 21h
 endm
 
+printChar macro char
+    mov ah, 02h
+    mov dl, char
+    int 21h
+endm
+
 getChar macro
     mov ah, 01h
     int 21h
