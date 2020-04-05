@@ -6,12 +6,13 @@ analisis macro
     openFile file2, handler
     readFile handler, fileData, SIZEOF fileData
     closeFile handler
-    ;Imprimir lo que se leyo
-    print msgOp
-    print fileData
     ;Analisis
     lexicalAnalysis
     syntaxAnalysis
+    ;Si todo esta bien lexicamente y sintacticamnete 
+    ;Imprimir lo que se leyo
+    print msgOp
+    print fileData
     toPostfix
     executeExpression
 endm
@@ -23,7 +24,7 @@ LOCAL while, continue, finish, error
 
     while:
         cmp si, fileSize
-        jge finish
+        je finish
 
         mov cl, fileData[si]
         ;math symbols
@@ -112,8 +113,9 @@ LOCAL while, finish, continue, symbol, continue, error, space
             jmp syntaxError
 
         finish:
-            
+            cmp cl, ';'
             jne syntaxEOF
+
     endm
 
 toPostfix macro
@@ -237,7 +239,7 @@ LOCAL while, finish
 endm
 
 executeExpression macro
-LOCAL while, addition, finish, continue, substraction, is_negative, normal
+LOCAL while, addition, finish, continue, substraction, is_negative, normal, fin
     xor ax, ax  ; 
     xor bx, bx  ;actual char
     xor cx, cx  ;number
@@ -319,7 +321,12 @@ LOCAL while, addition, finish, continue, substraction, is_negative, normal
             neg ax
             convertAscii ax, res
             print minus
+            print res 
+            print newLine
+            jmp fin
         normal:
+            convertAscii ax, res
             print res
             print newLine
+        fin:
 endm

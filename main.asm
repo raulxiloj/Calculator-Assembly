@@ -84,9 +84,9 @@ error7       db 10,13,"Error al escribir en el archivo",10,13,'$'
 error8       db 10,13,"Error al crear el archivo",10,13,'$'
 error9       db 10,13,"Error al leer el archivo",10,13,'$'
 error10      db 10,13,"Error al cerrar el archivo",10,13,'$'
-error11      db 10,13,"Error: caracter no reconocido en el archivo",10,13,'$'
+error11      db 10,13,"Error: caracter no reconocido en el archivo -> ",'$'
 error12      db 10,13,"Error: no se esperaba ese caracter en esa posicion", 10,13,'$'
-error13      db 10,13,"Error: se esperaba ',59,' al final de la cadena",10,13,'$'
+error13      db 10,13,"Error: se esperaba ; al final de la cadena",10,13,'$'
 error14      db 10,13,"Error: moviendo el puntero del fichero",10,13,'$'
 prueba       db 10,13,"Esto es una prueba gg",10,13,'$'
 ;----------------------------------------------------------------------------------------------
@@ -171,9 +171,13 @@ main proc
         plotFunction
         jmp menuPrincipal
     plot2:
+        clearScreen
+        getRange
         plotDerived
         jmp menuPrincipal
     plot3:
+        clearScreen
+        getRange
         plotIntegral
         jmp menuPrincipal
     invalidOption:
@@ -226,6 +230,8 @@ main proc
         jmp menuPrincipal
     lexicalError:
         print error11
+        printChar cl
+        print newLine
         cleanBuffer file1, SIZEOF file1, 24h
         cleanBuffer file2, SIZEOF file2, 24h
         jmp menuPrincipal
