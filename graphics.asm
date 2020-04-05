@@ -3,7 +3,6 @@ plotFunction macro
     setGraphicMode
     drawAxis
     checkFunction 
-    ;drawInterval
     ;press a key to exit
     mov ah, 10h
     int 16h
@@ -135,7 +134,6 @@ endm
 
 cascadaX4 macro
 LOCAL coefficient3, coefficient2, coefficient1, coefficient0, minus4,minus3,minus2,minus1,minus, fin
-    int 3
     ;Coefficient 4
     cmp cl, 10
     jg fin
@@ -327,7 +325,247 @@ LOCAL coefficient3, coefficient2, coefficient1, coefficient0, minus4,minus3,minu
 endm
 
 thirdGrade macro
+    LOCAL while, is_negative, is_positive, continue, finish
+    xor ax, ax
+    xor bx, bx          
+    xor cx, cx          ;cl = inter1 | ch = inter2
+    mov cl, inter1[1]   
+    mov ch, inter2[1]
 
+    while:
+        xor ax, ax
+        mov bl, 160         ;x
+        mov dl, 100         ;y (160,100) - (0,0)
+        ;checkSign
+        test cl,cl    
+        js is_negative
+        jmp is_positive
+        ;---------------Axis x----------------
+        is_negative:
+            neg cl
+            sub bl, cl      ;where x start
+            ;y
+            cascadaX3 0h
+            neg cl
+            jmp continue
+        is_positive:
+            mul cl
+            add bl, cl
+            cascadaX3 1h
+        ;-------------Axis y-------------------
+        continue:
+            ;Draw
+            drawPixel bx, dx, 0ch
+            inc cl
+            cmp cl, ch
+            jg finish
+            jmp while 
+    finish:
+endm
+
+cascadax3 macro signo
+LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, minus1, minus, coefficient1, coefficient0
+    cmp cl, 30 
+    jg fin
+
+    push cx
+    mov ch, signo
+    cmp ch, 0
+    je negative
+
+    ;------------------------------------------------------------------------------------------
+    ;Positive
+    pop cx
+
+    cmp c3[0],45
+    je minus31
+    ;----------------x^3---------------
+    pushExceptAX
+    xor ch, ch
+    potencia 3, cx
+    popExceptAx
+    ;------------------c3 * x^3----------------
+    push dx
+    xor dx, dx
+    mov dl, c3[1]
+    mul dx
+    pop dx
+    ;-----------------scale xd-----------------
+    pushExceptAX
+    xor dx, dx
+    mov cx, 500
+    div cx
+    popExceptAx
+    ;----------------real value---------------
+    sub dx, ax 
+    jmp coefficient2
+    minus31: 
+    ;------------------x^3--------------------
+    pushExceptAX
+    xor ch, ch
+    potencia 3, cx
+    popExceptAx
+    ;-----------------c3 * x^3----------------
+    push dx
+    xor dx, dx
+    mov dl, c3[1]
+    mul dx
+    pop dx
+    ;-----------------scale xd----------------
+    push cx
+    mov cx, 500
+    div cx
+    pop cx
+    ;----------------real value---------------
+    add dx, ax 
+    jmp coefficient2
+    ;--------------------------------------------------------------------------------------
+    negative:
+    pop cx
+
+    cmp c3[0],45
+    je minus32
+    ;----------------x^3---------------
+    pushExceptAX
+    xor ch, ch
+    potencia 3, cx
+    popExceptAx
+    ;------------------c3 * x^3----------------
+    push dx
+    xor dx, dx
+    mov dl, c3[1]
+    mul dx
+    pop dx
+    ;-----------------scale xd-----------------
+    pushExceptAX
+    xor dx, dx
+    mov cx, 500
+    div cx
+    popExceptAx
+    ;----------------real value---------------
+    add dx, ax 
+    jmp coefficient2
+    minus32: 
+    ;------------------x^3--------------------
+    pushExceptAX
+    xor ch, ch
+    potencia 3, cx
+    popExceptAx
+    ;-----------------c3 * x^3----------------
+    push dx
+    xor dx, dx
+    mov dl, c3[1]
+    mul dx
+    pop dx
+    ;-----------------scale xd----------------
+    push cx
+    mov cx, 500
+    div cx
+    pop cx
+    ;----------------real value---------------
+    sub dx, ax 
+    coefficient2:
+        cmp c2[0],45
+        je minus2
+        ;----------------x^2---------------
+        pushExceptAX
+        xor ch, ch
+        potencia 2, cx
+        popExceptAx
+        ;------------------c2 * x^2----------------
+        push dx
+        xor dx, dx
+        mov dl, c2[1]
+        mul dx
+        pop dx
+        ;-----------------scale xd-----------------
+        pushExceptAX
+        xor dx, dx
+        mov cx, 500
+        div cx
+        popExceptAx
+        ;----------------real value---------------
+        sub dx, ax 
+        jmp coefficient1
+        minus2: 
+        ;------------------x^2--------------------
+        pushExceptAX
+        xor ch, ch
+        potencia 2, cx
+        popExceptAx
+        ;-----------------c2 * x^2----------------
+        push dx
+        xor dx, dx
+        mov dl, c2[1]
+        mul dx
+        pop dx
+        ;-----------------scale xd----------------
+        push cx
+        mov cx, 500
+        div cx
+        pop cx
+        ;----------------real value---------------
+        add dx, ax 
+    coefficient1:
+        cmp c1[0],45
+        je minus1
+        ;----------------x^1---------------
+        pushExceptAX
+        xor ch, ch
+        potencia 1, cx
+        popExceptAx
+        ;------------------c1 * x^1----------------
+        push dx
+        xor dx, dx
+        mov dl, c1[1]
+        mul dx
+        pop dx
+        ;-----------------scale xd-----------------
+        pushExceptAX
+        xor dx, dx
+        mov cx, 500
+        div cx
+        popExceptAx
+        ;----------------real value---------------
+        sub dx, ax 
+        jmp coefficient0
+        minus1: 
+        ;------------------x^1--------------------
+        pushExceptAX
+        xor ch, ch
+        potencia 3, cx
+        popExceptAx
+        ;-----------------c1 * x^1----------------
+        push dx
+        xor dx, dx
+        mov dl, c1[1]
+        mul dx
+        pop dx
+        ;-----------------scale xd----------------
+        push cx
+        mov cx, 500
+        div cx
+        pop cx
+        ;----------------real value---------------
+        add dx, ax 
+    coefficient0:
+        cmp c0[0], 45
+        je minus
+        push cx
+            xor ch, ch
+            mov cl, c0[1]
+            sub dx, cx
+        pop cx
+        jmp fin
+        minus:
+        push cx
+            xor ch, ch
+            mov cl, c0[1]
+            add dx, cx
+        pop cx
+
+
+    fin:
 endm
 
 cuadratic macro
