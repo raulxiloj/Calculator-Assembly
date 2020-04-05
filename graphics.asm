@@ -1,21 +1,4 @@
-;---------------------GRAPHIC---------------------------------
-plotFunction macro
-    setGraphicMode
-    drawAxis
-    checkFunction 
-    ;press a key to exit
-    mov ah, 10h
-    int 16h
-    setTextMode     ;back to text mode
-endm
-
-plotDerived macro
-
-endm
-
-plotIntegral macro
-
-endm
+;-------------------------------MACROS GRAPHICS---------------------------------
 
 setGraphicMode macro
     mov ax, 0013h
@@ -27,7 +10,12 @@ setTextMode macro
     int 10h
 endm
 
-;draw a pixel
+pressKey macro
+    mov ah, 10h
+    int 16h
+endm
+
+;macro to draw a pixel in the graphic mode, (0,0) is in the top left corner
 drawPixel macro coorX, coorY, color
 LOCAL fin
     xor si, si
@@ -47,6 +35,7 @@ LOCAL fin
     fin:
 endm
 
+;macro to draw the axis x and y
 drawAxis macro
 LOCAL eje_x, eje_y
     xor cx, cx
@@ -60,8 +49,35 @@ LOCAL eje_x, eje_y
         loop eje_y
 endm
 
+;---------------------------------------------------------------------------------
+;macro to plot the principal function
+plotFunction macro
+    setGraphicMode
+    drawAxis
+    checkFunction 
+    pressKey        ;Press a key to continue
+    setTextMode     ;back to text mode
+endm
+
+;macro to plot the derived function
+plotDerived macro
+    setGraphicMode
+    drawAxis
+    checkDerived
+    pressKey        ;Press a key to continue
+    setTextMode     ;back to text mode
+endm
+
+;macro to plot the derived function
+plotIntegral macro
+    setGraphicMode
+    drawAxis
+    pressKey        ;Press a key to continue
+    setTextMode     ;back to text mode
+endm
+
 checkFunction macro
-LOCAL isFourthGrade, isCubic, isCuadratic, isConstant, finish
+LOCAL isFourthGrade, isCubic, isCuadratic, isLineal, isConstant, finish
     cmp c4[1], 0
     jne isFourthGrade
     cmp c3[1], 0
@@ -78,22 +94,50 @@ LOCAL isFourthGrade, isCubic, isCuadratic, isConstant, finish
         fourthGrade
         jmp finish
     isCubic:
-        thirdGrade
+        thirdGrade c3,c2,c1,c0
         jmp finish
     isCuadratic:
-        cuadratic 
+        cuadratic c2, c1, c0
         jmp finish
     isLineal:
-        lineal 
+        lineal  c1, c0
         jmp finish
     isConstant:
-        constant
+        constant c0
         jmp finish
     finish:
 
 endm
 
-fourthGrade macro
+checkDerived macro
+LOCAL isCubic, isCuadratic, isLineal, isConstant, finish
+    cmp d3[1], 0
+    jne isCubic
+    cmp d2[1], 0
+    jne isCuadratic
+    cmp d1[1], 0
+    jne isLineal
+    cmp d0[0], 0
+    jne isConstant
+    jmp finish
+
+    isCubic:
+        thirdGrade d3,d2,d1,d0
+        jmp finish
+    isCuadratic:
+        cuadratic d2, d1, d0
+        jmp finish
+    isLineal:
+        lineal d1, d0
+        jmp finish
+    isConstant:
+        constant d0
+        jmp finish
+    finish:
+
+endm
+
+fourthGrade macro 
 LOCAL while, is_negative, is_positive, continue, finish
     xor ax, ax
     xor bx, bx          
@@ -132,7 +176,7 @@ LOCAL while, is_negative, is_positive, continue, finish
     finish:
 endm
 
-cascadaX4 macro
+cascadaX4 macro 
 LOCAL coefficient3, coefficient2, coefficient1, coefficient0, minus4,minus3,minus2,minus1,minus, fin
     ;Coefficient 4
     cmp cl, 10
@@ -324,7 +368,7 @@ LOCAL coefficient3, coefficient2, coefficient1, coefficient0, minus4,minus3,minu
 
 endm
 
-thirdGrade macro
+thirdGrade macro var3, var2, var1, var0
     LOCAL while, is_negative, is_positive, continue, finish
     xor ax, ax
     xor bx, bx          
@@ -345,13 +389,13 @@ thirdGrade macro
             neg cl
             sub bl, cl      ;where x start
             ;y
-            cascadaX3 0h
+            cascadaX3 0, var3, var2, var1, var0
             neg cl
             jmp continue
         is_positive:
             mul cl
             add bl, cl
-            cascadaX3 1h
+            cascadaX3 1, var3, var2, var1, var0
         ;-------------Axis y-------------------
         continue:
             ;Draw
@@ -363,7 +407,7 @@ thirdGrade macro
     finish:
 endm
 
-cascadax3 macro signo
+cascadax3 macro signo, var3, var2, var1, var0
 LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, minus1, minus, coefficient1, coefficient0
     cmp cl, 30 
     jg fin
@@ -377,7 +421,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
     ;Positive
     pop cx
 
-    cmp c3[0],45
+    cmp var3[0],45
     je minus31
     ;----------------x^3---------------
     pushExceptAX
@@ -387,7 +431,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
     ;------------------c3 * x^3----------------
     push dx
     xor dx, dx
-    mov dl, c3[1]
+    mov dl, var3[1]
     mul dx
     pop dx
     ;-----------------scale xd-----------------
@@ -408,7 +452,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
     ;-----------------c3 * x^3----------------
     push dx
     xor dx, dx
-    mov dl, c3[1]
+    mov dl, var3[1]
     mul dx
     pop dx
     ;-----------------scale xd----------------
@@ -423,7 +467,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
     negative:
     pop cx
 
-    cmp c3[0],45
+    cmp var3[0],45
     je minus32
     ;----------------x^3---------------
     pushExceptAX
@@ -433,7 +477,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
     ;------------------c3 * x^3----------------
     push dx
     xor dx, dx
-    mov dl, c3[1]
+    mov dl, var3[1]
     mul dx
     pop dx
     ;-----------------scale xd-----------------
@@ -454,7 +498,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
     ;-----------------c3 * x^3----------------
     push dx
     xor dx, dx
-    mov dl, c3[1]
+    mov dl, var3[1]
     mul dx
     pop dx
     ;-----------------scale xd----------------
@@ -465,7 +509,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
     ;----------------real value---------------
     sub dx, ax 
     coefficient2:
-        cmp c2[0],45
+        cmp var2[0],45
         je minus2
         ;----------------x^2---------------
         pushExceptAX
@@ -475,7 +519,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
         ;------------------c2 * x^2----------------
         push dx
         xor dx, dx
-        mov dl, c2[1]
+        mov dl, var2[1]
         mul dx
         pop dx
         ;-----------------scale xd-----------------
@@ -496,7 +540,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
         ;-----------------c2 * x^2----------------
         push dx
         xor dx, dx
-        mov dl, c2[1]
+        mov dl, var2[1]
         mul dx
         pop dx
         ;-----------------scale xd----------------
@@ -507,7 +551,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
         ;----------------real value---------------
         add dx, ax 
     coefficient1:
-        cmp c1[0],45
+        cmp var1[0],45
         je minus1
         ;----------------x^1---------------
         pushExceptAX
@@ -517,7 +561,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
         ;------------------c1 * x^1----------------
         push dx
         xor dx, dx
-        mov dl, c1[1]
+        mov dl, var1[1]
         mul dx
         pop dx
         ;-----------------scale xd-----------------
@@ -538,7 +582,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
         ;-----------------c1 * x^1----------------
         push dx
         xor dx, dx
-        mov dl, c1[1]
+        mov dl, var1[1]
         mul dx
         pop dx
         ;-----------------scale xd----------------
@@ -549,18 +593,18 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
         ;----------------real value---------------
         add dx, ax 
     coefficient0:
-        cmp c0[0], 45
+        cmp var0[0], 45
         je minus
         push cx
             xor ch, ch
-            mov cl, c0[1]
+            mov cl, var0[1]
             sub dx, cx
         pop cx
         jmp fin
         minus:
         push cx
             xor ch, ch
-            mov cl, c0[1]
+            mov cl, var0[1]
             add dx, cx
         pop cx
 
@@ -568,7 +612,7 @@ LOCAL fin, positive, negative, minus3,coefficient2, minus31, minus32, minus2, mi
     fin:
 endm
 
-cuadratic macro
+cuadratic macro var2, var1, var0
 LOCAL while, finish, is_negative, is_positive, continue
     xor ax, ax
     xor bx, bx          
@@ -587,76 +631,140 @@ LOCAL while, finish, is_negative, is_positive, continue
         is_negative:
             neg cl
             sub bl, cl  
-            pushExceptAX     
-            potencia 2, cl 
-            popExceptAx
+            cascadaX2 var2, var1, var0
             neg cl
-            cascadaX2
             jmp continue
         is_positive:
             mul cl
             add bl, cl
-            pushExceptAX     
-            potencia 2, cl 
-            popExceptAx
-            ;sub dl, al
-            cascadaX2
+            cascadaX2 var2, var1, var0
         continue:
-            inc cl
-            xor dh, dh
-            ;check axis x
+            ;Draw
             drawPixel bx, dx, 0ch
+            inc cl
             cmp cl, ch
             jg finish
             jmp while 
     finish:
 endm
 
-cascadaX2 macro
-LOCAL plus2,minus2, plus1, minus1, continue, plus0, minus0, fin, coefficient1, coefficient0
-    ;coefficient 2
-    cmp c2[0],43
-    je plus2
-    jmp minus2
-    plus2:
-        mul c2[1]
-        sub dl, al
-        jmp coefficient0
+cascadaX2 macro var2, var1, var0
+LOCAL minus2, minus1, continue, minus0, fin, coefficient1, coefficient0
+    cmp cl, 80
+    jg fin
+    ;------------coefficient 2---------------
+    cmp var2[0],45
+    je minus2
+    ;Positivo
+    ;---------------x^2---------------
+    pushExceptAX 
+    xor ch, ch
+    potencia 2, cx
+    popExceptAx
+    ;---------------c2*x^2--------------
+    push dx 
+    xor dx, dx
+    mov dl, var2[1]
+    mul dx
+    pop dx
+    ;-----------------Scale xd-------------
+    pushExceptAX
+    xor dx, dx
+    mov cx, 500
+    div cx
+    popExceptAx
+    ;--------------real value---------------
+    sub dx, ax
+    jmp coefficient1
+    ;Negativo
     minus2:
-        mul c2[1]
-        sub dl, al
+        ;---------------x^2---------------
+        pushExceptAX 
+        xor ch, ch
+        potencia 2, cx
+        popExceptAx
+        ;---------------c2*x^2--------------
+        push dx 
+        xor dx, dx
+        mov dl, var2[1]
+        mul dx
+        pop dx
+        ;-----------------Scale xd-------------
+        pushExceptAX
+        xor dx, dx
+        mov cx, 500
+        div cx
+        popExceptAx
+        ;--------------real value---------------
+        add dx, ax
     coefficient1:
-    ;coefficient 1
         xor ax, ax
-        cmp c1[0],43
-        je plus1
-        jmp minus1
-    plus1:
-        mov al, c1[1]
-        mul cl
-        sub dl, al
+        cmp var1[0],45
+        je minus1
+        ;positivo
+        ;---------------x^1---------------
+        pushExceptAX 
+        xor ch, ch
+        potencia 1, cx
+        popExceptAx
+        ;---------------c1*x^1--------------
+        push dx 
+        xor dx, dx
+        mov dl, var1[1]
+        mul dx
+        pop dx
+        ;-----------------Scale xd-------------
+        pushExceptAX
+        xor dx, dx
+        mov cx, 500
+        div cx
+        popExceptAx
+        ;--------------real value---------------
+        sub dx, ax
         jmp coefficient0
     minus1:
-        mov al, c1[1]
-        mul cl
-        add dl, al
+        ;---------------x^1---------------
+        pushExceptAX 
+        xor ch, ch
+        potencia 1, cx
+        popExceptAx
+        ;---------------c1*x^1--------------
+        push dx 
+        xor dx, dx
+        mov dl, var1[1]
+        mul dx
+        pop dx
+        ;-----------------Scale xd-------------
+        pushExceptAX
+        xor dx, dx
+        mov cx, 500
+        div cx
+        popExceptAx
+        ;--------------real value---------------
+        add dx, ax
     coefficient0:
     ;coefficient 0
-        cmp c0[0],43
-        je plus0
-        jmp minus0
-    plus0:
-        sub dl, c0[1]
-        jmp fin
+    cmp var0[0],45
+    je minus0
+    push cx
+        xor ch, ch
+        mov cl, var0[1]
+        sub dx, cx
+    pop cx
+    jmp fin
     minus0:
-        add dl, c0[1]
+    push cx
+        xor ch, ch
+        mov cl, var0[1]
+        add dx, cx
+    pop cx
     fin:
 
 endm
 
-lineal macro
+lineal macro var1, var0
 LOCAL while, finish, is_negative, is_positive, continue, plusN, plusP, minusN, minusP
-    xor ax, ax
+   xor ax, ax
     xor bx, bx          ;x
     xor cx, cx          ;cl = inter1 | ch = inter2
     mov cl, inter1[1]   
@@ -712,7 +820,7 @@ LOCAL while, finish, is_negative, is_positive, continue, plusN, plusP, minusN, m
 
 endm
 
-constant macro
+constant macro var0
 LOCAL while, temp, finish, plus, minus, continue
     xor bx, bx
     xor cx, cx   
@@ -721,15 +829,15 @@ LOCAL while, temp, finish, plus, minus, continue
     mov bl, 160     ;x
     mov dl, 100     ;y
     ;checkSign coefficient
-    cmp c0[0], 43
+    cmp var0[0], 43
     je plus 
     jmp minus
 
     plus: 
-        sub dl, c0[1]
+        sub dl, var0[1]
         jmp continue
     minus:
-        add dl, c0[1]
+        add dl, var0[1]
     continue:
         cmp inter1[0],45
         je temp
